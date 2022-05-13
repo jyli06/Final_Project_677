@@ -7,6 +7,37 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.width=8, fig.height=4,fig.align = "center") 
+pacman::p_load(
+tidyverse,
+MASS,
+openxlsx,
+mle.tools,
+fitdistrplus,
+deconvolveR
+)
 ```
+
+#Introduction
+
+
+To start with, I will solve the exercises mentioned in the rubrics
+
+# Answer exercise 4.25
+
+
+```{r}
+
+
+```
+
+
+### Question 3
+To what extent do you believe the results of your analysis are generalizable? What do you think
+the next steps would be after the analysis? An article by Floyd Huff, one of the authors of the 1967
+report is included.
+
+
+Data is not enough. We can try to enlarge the data based on some API online or applied bootstrap or MCMN.
 
 
