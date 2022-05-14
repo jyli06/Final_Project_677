@@ -21,13 +21,41 @@ deconvolveR
 #Introduction
 
 
-To start with, I will solve the exercises mentioned in the rubrics
+To start with, I will solve the exercises mentioned in the book In All Likelihood
 
 # Answer exercise 4.25
 
+To solve this problem, we need to build a function to come up with the order statistics
 
 ```{r}
 
+f <- function(x, a=0, b=1) dunif(x, a,b) #pdf function
+F <- function(x, a=0, b=1) punif(x, a,b, lower.tail=FALSE) #cdf function
+
+#distribution of the order statistics
+integrand <- function(x,r,n) {
+  x * (1 - F(x))^(r-1) * F(x)^(n-r) * f(x)
+}
+
+#get expectation
+E <- function(r,n) {
+  (1/beta(r,n-r+1)) * integrate(integrand,-Inf,Inf, r, n)$value
+} 
+
+# approx function
+medianprrox<-function(k,n){
+  m<-(k-1/3)/(n+1/3)
+  return(m)
+}
+
+
+E(2.5,5)
+medianprrox(2.5,5)
+
+E(5,10)
+medianprrox(5,10)
+
+```
 
 ```
 
