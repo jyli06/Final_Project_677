@@ -2,7 +2,9 @@
 title: "Final project 677_Illinois_precipitations"
 author: "Jinyu"
 date: "5/13/2022"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -23,7 +25,7 @@ deconvolveR
 
 To start with, I will solve the exercises mentioned in the book In All Likelihood
 
-# Answer the exercise 4.25
+## Answer the exercise 4.25
 
 To solve this problem, we need to build a function to come up with the order statistics
 
@@ -69,7 +71,7 @@ print("Get the median value When n=10")
 As we can see, the approximation for n=5 and n=10 are similar or exactly the same.
 
 
-# Answer the exercise 4.39
+## Answer the exercise 4.39
 
 ```{r}
 data<-c(0.4,1.0,1.9,3.0,5.5,8.1,12.1,25.6,50.0,56.0,70.0,115.0,115.0,119.5,154.5,157.0,175.0,179.0,180.0,406.0)
@@ -87,7 +89,7 @@ new_data <- (data ^ lambda - 1) / lambda
 hist(new_data)
 ```
 
-## 4.27
+## Answer the exercise 4.27
 
 ```{r}
 Jan<-c(0.15,0.25,0.10,0.20,1.85,1.97,0.80,0.20,0.10,0.50,0.82,0.40,1.80,0.20,1.12,1.83,
