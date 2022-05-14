@@ -2,6 +2,6 @@
 
 This is the final project for MA677.
 
-Here is what this repository include.
-The code: MA677_Illinois.Rmd
+Here is what this repository include.</br>
+The code: MA677_Illinois.Rmd</br>
 The report:
