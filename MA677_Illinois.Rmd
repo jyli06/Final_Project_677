@@ -122,11 +122,20 @@ new_avg_weight <- (avg_weight ^ lambda - 1) / lambda
 hist(new_avg_weight)
 ```
 
-We can have a simple compare the original data and the data after the transformation based on the shapiro-wilk normality test. Here is the test on the original data
+So the transformation should be $y(0.2626263) =\frac{y^{0.2626263}-1}{0.2626263}$, where y is the data we input (avg_weight).
+
+We can have a simple compare the original data and the data after the transformation based on the shapiro-wilk normality test or qqplot. Here is the test on the original data
 ```{r}
 #Shapiro-Wilk normality test on original data
 shapiro.test(avg_weight)
 ```
+
+Here is the qqplot on the original data
+```{r}
+qqnorm(avg_weight)
+qqline(avg_weight, col = "steelblue", lwd = 2)
+```
+
 
 Now the transformed data looks more like following a normal distribution, but we can also perform, for instance, a statistical test to check it, as the Shapiro-Wilk test:
 ```{r}
@@ -138,10 +147,19 @@ shapiro.test(new_avg_weight)
 As the p-value is greater than the usual levels of significance (1%, 5% and 10%) we have no evidence to reject the null hypothesis of normality.
 
 
+Here is the qqplot on the data after transformation:
+```{r}
+qqnorm(new_avg_weight)
+qqline(new_avg_weight, col = "steelblue", lwd = 2)
+```
+
+We can tell the data after the transformation
+
 
 ## Answer the exercise 4.27
 
 ```{r}
+# save the rainfall data
 Jan<-c(0.15,0.25,0.10,0.20,1.85,1.97,0.80,0.20,0.10,0.50,0.82,0.40,1.80,0.20,1.12,1.83,
        0.45,3.17,0.89,0.31,0.59,0.10,0.10,0.90,0.10,0.25,0.10,0.90)
 Jul<-c(0.30,0.22,0.10,0.12,0.20,0.10,0.10,0.10,0.10,0.10,0.10,0.17,0.20,2.80,0.85,0.10,
@@ -159,27 +177,32 @@ summary(Jul)
 ```
 
 
-Jan's 1st, Median, Mean 3rd Max are higher than the one in Jul. Also, Jan's IQR is higher than the one in Jul.
+For the rainfall in January, the 1st, Median, Mean 3rd Max are larger than the ones in July. We can also tell that the IQR of the rainfall in January is larger than that in July.
 
 ### (b)
 
+We looked at the QQ-plot of the data
+In January,
 ```{r}
-qqnorm(Jan, pch = 1)
+qqnorm(Jan, pch = 1, main = "Normal Q-Q Plot for January")
 qqline(Jan, col = "steelblue", lwd = 2)
-qqnorm(Jul, pch = 1)
+```
+
+In July,
+```{r}
+qqnorm(Jul, pch = 1, main = "Normal Q-Q Plot for July")
 qqline(Jul, col = "steelblue", lwd = 2)
 ```
 
 ```{r}
+# get the density plot
 par(mfrow = c(1, 2))  
 plot(density(Jan),main='Jan density')
 plot(density(Jul),main='Jul density')
 ```
 
-
-
-The qqplots show that the sample doesn't follow normal distribution.    
-From the density plot, these data looks like gamma distribution. Therefore, gamma distribution can be considered to fit the model. 
+As we can see in the qqplots, these 2 datasets don't look like following the normal distribution.
+According to the density plot, we can tell that they might follow gamma distributions, so we may use gamma distribution to fit the data.
 
 ### (c)
 
