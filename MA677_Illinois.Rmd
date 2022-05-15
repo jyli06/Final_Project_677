@@ -16,7 +16,8 @@ MASS,
 openxlsx,
 mle.tools,
 fitdistrplus,
-deconvolveR
+deconvolveR,
+ggplot2
 )
 ```
 
@@ -27,7 +28,7 @@ To start with, I will solve the exercises mentioned in the book In All Likelihoo
 
 ## Answer the exercise 4.25
 
-To solve this problem, we need to build a function to come up with the order statistics
+To solve this problem, we need to build a function of the order statistics
 
 ```{r}
 # reference: https://stackoverflow.com/questions/24211595/order-statistics-in-r?msclkid=fd6683dac56711ecbfcea9bd8a172395
@@ -55,7 +56,7 @@ medianprrox<-function(k,n){
 }
 ```
 
-And we try to calculate the median when n=5 and when n=10
+And I calculate the median when n=5 and when n=10 as well as their approximation
 ```{r}
 # get the value when n=5, i=3
 print("Get the median value When n=5")
@@ -68,24 +69,32 @@ print("Get the median value When n=10")
 (medianprrox(5,10) + medianprrox(6,10))/2
 
 ```
-As we can see, the approximation for n=5 and n=10 are similar or exactly the same.
+As we can see, the approximation for n=5 and n=10 are exactly the same.
 
 
 ## Answer the exercise 4.39
 
+Now I try to answer the exercise 4.39
+
+we firstly take a look at our data
 ```{r}
-data<-c(0.4,1.0,1.9,3.0,5.5,8.1,12.1,25.6,50.0,56.0,70.0,115.0,115.0,119.5,154.5,157.0,175.0,179.0,180.0,406.0)
-hist(data)
+avg_weight <-c(0.4,1.0,1.9,3.0,5.5,8.1,12.1,25.6,50.0,56.0,70.0,115.0,115.0,119.5,154.5,157.0,175.0,179.0,180.0,406.0)
+hist(avg_weight)
 ```
+```{r}
+density(avg_weight)
+```
+
+
 
 
 ```{r}
 # Conduct boxcox transformation
-b <- boxcox(lm(data ~ 1))
+b <- boxcox(lm(avg_weight ~ 1))
 # Exact lambda
 lambda <- b$x[which.max(b$y)] 
 lambda #lambda=0.2626263
-new_data <- (data ^ lambda - 1) / lambda
+new_data <- (avg_weight ^ lambda - 1) / lambda
 hist(new_data)
 ```
 
@@ -171,7 +180,8 @@ ans_jul$estimate
 Here is the std
 
 ```{r}
-#https://stats.stackexchange.com/questions/81542/standard-error-of-mle#:~:text=How%20are%20you%20obtaining%20the%20MLE%3F%20If%20your,the%20Hessian.%20In%20R%3A%20sqrt%20%28diag%20%28solve%20%28-Hessian%29%29%29.
+# reference
+# https://stats.stackexchange.com/questions/81542/standard-error-of-mle#:~:text=How%20are%20you%20obtaining%20the%20MLE%3F%20If%20your,the%20Hessian.%20In%20R%3A%20sqrt%20%28diag%20%28solve%20%28-Hessian%29%29%29.
 sqrt(diag(solve(ans_jan$hessian))) #use hessian matrix to get std
 
 sqrt(diag(solve(ans_jul$hessian)))
@@ -195,7 +205,7 @@ Parameter comparison: Jan's alpha is lower than Jul's alpha. Jan's beta is lower
 
 The third way is to use optim. I will use this method to conduct profile likelihood.
 
-```{r}
+```{r warning=FALSE}
 
 
 #https://www.r-bloggers.com/2015/11/profile-likelihood/
@@ -215,7 +225,7 @@ plot(vx,vl,type="l",main='Jan profile likelihood (fixed shape)')
 
 
 
-```{r}
+```{r warning=FALSE}
 x=Jul
 vx=seq(.1,3,length=50)
 vl=-Vectorize(prof_log_lik)(vx)
@@ -224,7 +234,7 @@ plot(vx,vl,type="l",main='Jul profile likelihood (fixed shape)')
 
 For fixed rate, we can use the same method to get the profile likelihood.
 
-```{r}
+```{r warning=FALSE}
 x=Jan
 prof_log_lik=function(z){
    a=(optim(1,function(a) -sum(log(dgamma(x,a,z)))))$par
@@ -236,7 +246,7 @@ vl=-Vectorize(prof_log_lik)(vx)
 plot(vx,vl,type="l",main='Jan profile likelihood (fixed rate)')
 ```
 
-```{r}
+```{r warning=FALSE}
 x=Jul
 
 vx=seq(.1,5,length=50)
