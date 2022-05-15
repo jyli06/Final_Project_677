@@ -50,7 +50,7 @@ E <- function(r,n) {
 } 
 
 # approx function
-medianprrox<-function(k,n){
+median_aprrox<-function(k,n){
   m<-(k-1/3)/(n+1/3)
   return(m)
 }
@@ -61,12 +61,12 @@ And I calculate the median when n=5 and when n=10 as well as their approximation
 # get the value when n=5, i=3
 print("Get the median value When n=5")
 E(3,5)
-medianprrox(3,5)
+median_aprrox(3,5)
 
 # get the value when n=10, i=5.5
 print("Get the median value When n=10")
 (E(5,10) + E(6,10))/2
-(medianprrox(5,10) + medianprrox(6,10))/2
+(median_aprrox(5,10) + median_aprrox(6,10))/2
 
 ```
 As we can see, the approximation for n=5 and n=10 are exactly the same.
@@ -76,27 +76,68 @@ As we can see, the approximation for n=5 and n=10 are exactly the same.
 
 Now I try to answer the exercise 4.39
 
-we firstly take a look at our data
+we first take a look at our data and describe them by histgram and density plot
 ```{r}
 avg_weight <-c(0.4,1.0,1.9,3.0,5.5,8.1,12.1,25.6,50.0,56.0,70.0,115.0,115.0,119.5,154.5,157.0,175.0,179.0,180.0,406.0)
 hist(avg_weight)
 ```
 ```{r}
-density(avg_weight)
+hist(avg_weight,col="green",
+     border="black",
+     prob = TRUE,
+     xlab = "average weight",
+     main = "Frenquency Distribution")
+
+lines(density(avg_weight),
+      lwd = 2,
+      col = "chocolate3")
+
+# density plot
+# plot(density(avg_weight), frame = FALSE, col = "blue",main = "Density plot")
 ```
 
+Now I applied the box-cox transformation to the data, which is to transform my non-normal dependent variables into normal shape.
 
+Here is a box-cox formula for positive dataset, when given an input of Y:
 
+$$y(\lambda) =\left\{\begin{matrix}
+\frac{y^\lambda-1}{\lambda}, if \lambda\neq 0 \\ log(y), if \lambda = 0
+\end{matrix}\right.$$
+
+The $\lambda$ is a parameter of the exponent, which varies from -5 to 5. All values of $\lambda$ are considered and the optimal value for my data is selected
 
 ```{r}
+# reference: https://r-coder.com/box-cox-transformation-r/
+
 # Conduct boxcox transformation
-b <- boxcox(lm(avg_weight ~ 1))
-# Exact lambda
-lambda <- b$x[which.max(b$y)] 
-lambda #lambda=0.2626263
-new_data <- (avg_weight ^ lambda - 1) / lambda
-hist(new_data)
+box_weight <- boxcox(lm(avg_weight ~ 1))
+
 ```
+
+```{r}
+# the optimal value of the lambda 
+lambda <- box_weight$x[which.max(box_weight$y)] 
+lambda #lambda=0.2626263
+new_avg_weight <- (avg_weight ^ lambda - 1) / lambda
+hist(new_avg_weight)
+```
+
+We can have a simple compare the original data and the data after the transformation based on the shapiro-wilk normality test. Here is the test on the original data
+```{r}
+#Shapiro-Wilk normality test on original data
+shapiro.test(avg_weight)
+```
+
+Now the transformed data looks more like following a normal distribution, but we can also perform, for instance, a statistical test to check it, as the Shapiro-Wilk test:
+```{r}
+#Shapiro-Wilk normality test on data after transformation
+shapiro.test(new_avg_weight)
+
+```
+
+As the p-value is greater than the usual levels of significance (1%, 5% and 10%) we have no evidence to reject the null hypothesis of normality.
+
+
 
 ## Answer the exercise 4.27
 
@@ -245,6 +286,7 @@ vx=seq(.1,3,length=50)
 vl=-Vectorize(prof_log_lik)(vx)
 plot(vx,vl,type="l",main='Jan profile likelihood (fixed rate)')
 ```
+
 
 ```{r warning=FALSE}
 x=Jul
