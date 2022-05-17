@@ -33,6 +33,8 @@ To solve this problem, we need to build a function of the order statistics
 ```{r}
 # reference: https://stackoverflow.com/questions/24211595/order-statistics-in-r?msclkid=fd6683dac56711ecbfcea9bd8a172395
 
+# reference: https://www.statisticshowto.com/box-cox-transformation/#:~:text=What%20is%20a%20Box%20Cox%20Transformation%3F%20A%20Box,able%20to%20run%20a%20broader%20number%20of%20tests.
+
 f <- function(x, a=0, b=1) dunif(x, a,b) #pdf function
 F <- function(x, a=0, b=1) punif(x, a,b, lower.tail=FALSE) #cdf function
 
@@ -206,7 +208,7 @@ According to the density plot, we can tell that they might follow gamma distribu
 
 ### (c)
 
-There are many ways to solve the problem. I listed three methods here. The first one is to use fitdist:
+There are many ways to solve the problem. I use the fitdist here, which is to fit a distribution based on the data, the distribution family given by ourselves, and the estimation given by ourselves:
 
 ```{r}
 Jan.fit1=fitdist(Jan,'gamma','mle')
@@ -218,115 +220,18 @@ Jul.fit1=fitdist(Jul,'gamma','mle')
 Jul.fit1
 ```
 
-The second method is to nlm:
-```{r}
-#https://stackoverflow.com/questions/59435824/nlm-with-multiple-variables-in-r
-data<-Jan
-neg_likelihood<-function(param){
-  alpha<-param[1]
-  beta<-param[2]
-  p<-dgamma(data,shape=alpha,scale=1/beta)
-  re<--1*sum(log(p))
-  return(re)
-}
-#neg_likelihood(c(0.5,1))
-
-
-p <- array(c(0.4, 0.4), dim = c(2, 1))
-ans_jan <- nlm(f = neg_likelihood,p,hessian=T)
-ans_jan$estimate
-```
-```{r}
-data<-Jul
-ans_jul <- nlm(f = neg_likelihood,p,hessian=T)
-ans_jul$estimate
-```
-Here is the std
-
-```{r}
-# reference
-# https://stats.stackexchange.com/questions/81542/standard-error-of-mle#:~:text=How%20are%20you%20obtaining%20the%20MLE%3F%20If%20your,the%20Hessian.%20In%20R%3A%20sqrt%20%28diag%20%28solve%20%28-Hessian%29%29%29.
-sqrt(diag(solve(ans_jan$hessian))) #use hessian matrix to get std
-
-sqrt(diag(solve(ans_jul$hessian)))
-```
-
-For MLE, do some stransformation loglikelihood into MLE:
-
-```{r}
-exp(Jan.fit1$loglik)
-exp(Jul.fit1$loglik)
-```
-
-```{r}
-exp(-ans_jan$minimum)
-exp(-ans_jul$minimum)
-```
-
-From MLE, Jul's MLE is higher than the one of Jan. Jul's model is better than Jan's.    
-Parameter comparison: Jan's alpha is lower than Jul's alpha. Jan's beta is lower than Jul's beta.
-
-
-The third way is to use optim. I will use this method to conduct profile likelihood.
-
-```{r warning=FALSE}
-
-
-#https://www.r-bloggers.com/2015/11/profile-likelihood/
-# optim is similar to nlm
-# Jan
-x=Jan
-prof_log_lik=function(a){
-   b=(optim(1,function(z) -sum(log(dgamma(x,a,z)))))$par
-   return(-sum(log(dgamma(x,a,b))))
- }
-
-vx=seq(.1,3,length=50)
-vl=-Vectorize(prof_log_lik)(vx)
-plot(vx,vl,type="l",main='Jan profile likelihood (fixed shape)')
-```
-
-
-
-
-```{r warning=FALSE}
-x=Jul
-vx=seq(.1,3,length=50)
-vl=-Vectorize(prof_log_lik)(vx)
-plot(vx,vl,type="l",main='Jul profile likelihood (fixed shape)')
-```
-
-For fixed rate, we can use the same method to get the profile likelihood.
-
-```{r warning=FALSE}
-x=Jan
-prof_log_lik=function(z){
-   a=(optim(1,function(a) -sum(log(dgamma(x,a,z)))))$par
-   return(-sum(log(dgamma(x,a,z))))
- }
-
-vx=seq(.1,3,length=50)
-vl=-Vectorize(prof_log_lik)(vx)
-plot(vx,vl,type="l",main='Jan profile likelihood (fixed rate)')
-```
-
-
-```{r warning=FALSE}
-x=Jul
-
-vx=seq(.1,5,length=50)
-vl=-Vectorize(prof_log_lik)(vx)
-plot(vx,vl,type="l",main='Jul profile likelihood (fixed rate)')
-```
 
 
 ### (d)
+
+Now I conduct a qqgamma function to check if the data relatively follow gamma distribution. 
 
 ```{r}
 # library(qpToolkit)
 # qqGamma(resid(Jan.fit))
 # reference:qpToolkit
 # https://github.com/qPharmetra/qpToolkit/blob/master/R/qqGamma.r
+
 qqGamma <- function(x
                   , ylab = deparse(substitute(x))
                   , xlab = "Theoretical Quantiles"
@@ -351,7 +256,7 @@ qqGamma(Jul)
 
 ```
 
-It seems that Jul is better.
+According to the plot, we assume that the data in July is better.
 
 
 
@@ -364,6 +269,8 @@ Estimate the parameters of the distribution using MLE. Prepare a discussion of y
 including how confident you are about your identification of the distribution and the accuracy of
 your parameter estimates.
 
+I first investigate the density distribution of our data in these 5 year.
+
 ```{r fig.height=6}
 rain=read.xlsx('Illinois_rain_1960-1964.xlsx')
 par(mfrow = c(3, 2))  
@@ -374,26 +281,31 @@ density(rain$`1963` %>% na.omit()) %>% plot(main='1963')
 density(rain$`1964` %>% na.omit()) %>% plot(main='1964')
 density(unlist(rain) %>%  na.omit()) %>% plot(main='Total')
 ```
+As we can see, it looks like all the data follow gamma distribution. So I decide to use gamma distribution fit the data.
 
-First I use the whole dataset to conduct fitdist. For method, MLE and MSE are selected to compare which method is better.
+To build a gamma distribution, I also need to estimate the parameters based on our sample data.
+
+I conduct the fitdist based on the data of the whole 5 year. The MLS and MSE will be selected to decide which method is better.
 
 ```{r}
-fit1<-fitdist(unlist(rain) %>%  na.omit() %>% c(),'gamma',method='mle') #MLE estimation
-fit2<-fitdist(unlist(rain) %>%  na.omit() %>% c(),'gamma',method='mse') #MSE estimation
+fit_1<-fitdist(unlist(rain) %>%  na.omit() %>% c(),'gamma',method='mle') #MLE estimation
+fit_2<-fitdist(unlist(rain) %>%  na.omit() %>% c(),'gamma',method='mse') #MSE estimation
 ```
 
 ```{r eval=FALSE}
-summary(bootdist(fit1)) #boot get confidence interval
-summary(bootdist(fit2)) #boot get confidence interval
+summary(bootdist(fit_1)) #boot get confidence interval
+summary(bootdist(fit_2)) #boot get confidence interval
 
 ```
+I make a table of the summary of the MLE and MSE
+The median along with 95% confidence interval is shown in the table below. We can tell that the confidence interval of MLE has a smaller range, which I assume is more reliable.
 
-Table:MLE fit of Rain
+Table:MLE fit of 
 
 |   |Median |2.5%|97.5%|
 |---|-------|----|-----|
-|shape|0.4447568|0.3867703|0.521934|
-|rate|1.9825172|1.5781062|2.567854|
+|shape|0.4435628 |0.3860337 |0.5202142|
+|rate|1.9995672 |1.5649509 |2.5637509|
 
 
 
@@ -401,13 +313,12 @@ Table:MSE fit of Rain
 
 |   |Median |2.5%|97.5%|
 |---|-------|----|-----|
-|shape|0.3917468|0.2726087|0.5300762|
-|rate|1.7586151|1.1622105|2.5227109|
+|shape|0.7172206 |0.6158771 |0.8358881|
+|rate|1.3332668 |1.0842435 |1.6552038|
 
-The median and 95% confidence interval is shown in the above table. Compared to MSE, MSE's confidence interval is much narrower. Therefore, MLE fits the rain data better. The confidence interval indicates that the estimation is reliable.
 
 ```{r fig.height=4}
-plot(fit1)
+plot(fit_1)
 ```
 
 
@@ -416,10 +327,10 @@ plot(fit1)
 Using this distribution, identify wet years and dry years. Are the wet years wet because there were
 more storms, because individual storms produced more rain, or for both of these reasons?
 
-
+To answer this question, I made some descriptive statistics on the rainfall.
 ```{r}
 
-rain_mean=fit1$estimate[1]/fit1$estimate[2] #get mean for whole dataset
+rain_mean=fit_1$estimate[1]/fit_1$estimate[2] #get mean for whole dataset
 re=apply(rain,2,mean,na.rm =TRUE) # get mean for each year
 
 out<-c(re,rain_mean %>% as.numeric() %>% round(4))
@@ -433,8 +344,10 @@ knitr::kable(rbind(out,num_storm)) # show the result
 ```
 
 
-Compared to mean, 1962, 1964 are dryer years, 1961 and 1963 are wetter years. 1960 is the normal year. We can also conclude that more storms don't necessarily result in wet year and more rain in individual storm don't necessarily result in wet year.    
-Therefore, both of these reasons have influence on amount of rainfall.
+Based on the mean, 1962, 1964 are dryer years, 1961 and 1963 are wetter years. 1960 is the normal year. We can also conclude that more storms don't necessarily result in wet year and more rain in individual storm don't necessarily result in wet year.
+Another way to decide which year is wet year is to make a expert system, which is a threshold in this case. We can get the percentage of days beyond the threshold to rank those year and decide which year should be wet year.
+
+As a result, there are many components influence our decisions.
 
 
 ```{r eval=FALSE,echo=FALSE}
@@ -472,14 +385,13 @@ colnames(df)<-year
 knitr::kable(df,'pipe')
 ```
 
-I also conduct fitdist on each individual year. The results are shown below:
 
 |          |1960    |1961    |1962    |1963    |1964    |
 |:---------|:-------|:-------|:-------|:-------|:-------|
 |mean      |0.22032 |0.27494 |0.18475 |0.26245 |0.18713 |
 |num_storm |48      |48      |56      |37      |38      |
 
-
+The result above shows the mean and number of storms, which is made by fitdist considering all the data in each year follow gamma distribution seperately. 
 
 ### Question 3
 
@@ -488,6 +400,6 @@ the next steps would be after the analysis? An article by Floyd Huff, one of the
 report is included.
 
 
-Data is not enough, which is to say that 5 years of observations are not enough for the distribution verification. We can try to enlarge the data based on some API online or applied bootstrap or MCMN.
+Data is not enough, which is to say that 5 years of observations are not enough for the distribution verification. We can try to enlarge the data based on some API online or applied bootstrap or MCMN. And Huff's article focused on description statistics. We still need a reliable data to make further analysis. 
 
 
